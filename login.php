@@ -2,44 +2,51 @@
 session_start();
 
 // Add Content Security Policy (CSP) Header
-header("Content-Security-Policy: default-src 'self'; style-src 'self'; script-src 'self';");
+header(
+    "Content-Security-Policy: default-src 'self'; style-src 'self'; script-src 'self';"
+);
 
 // Enforce HTTPS
-if (!isset($_SERVER['HTTPS']) || $_SERVER['HTTPS'] !== 'on') {
-    header('Location: https://' . $_SERVER['HTTP_HOST'] . $_SERVER['REQUEST_URI']);
+if (!isset($_SERVER["HTTPS"]) || $_SERVER["HTTPS"] !== "on") {
+    // Safely redirect to HTTPS without hostname whitelisting
+    $redirectUrl =
+        "https://" .
+        htmlspecialchars($_SERVER["HTTP_HOST"]) .
+        htmlspecialchars($_SERVER["REQUEST_URI"]);
+    header("Location: " . $redirectUrl);
     exit();
 }
 
 // Generate CSRF token
-if (empty($_SESSION['csrf_token'])) {
-    $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
+if (empty($_SESSION["csrf_token"])) {
+    $_SESSION["csrf_token"] = bin2hex(random_bytes(32));
 }
 
 // Validate that the URL does not contain extra path segments
-$requestUri = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
-if ($requestUri !== '/login.php') {
+$requestUri = parse_url($_SERVER["REQUEST_URI"], PHP_URL_PATH);
+if ($requestUri !== "/login.php") {
     http_response_code(404);
     echo "<h1>404 Not Found</h1>";
     exit();
 }
 
 // Load credentials from configuration file
-$config = include 'config.php';
-define('USERNAME', $config['username']);
-define('HASHED_PASSWORD', $config['hashed_password']);
+$config = include "config.php";
+define("USERNAME", $config["username"]);
+define("HASHED_PASSWORD", $config["hashed_password"]);
 
 // Check if the user is already logged in
-if (isset($_SESSION['logged_in']) && $_SESSION['logged_in'] === true) {
+if (isset($_SESSION["logged_in"]) && $_SESSION["logged_in"] === true) {
     header("Location: home.php");
     exit();
 }
 
-$error = '';
+$error = "";
 
 // Handle login form submission
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $username = trim($_POST['username'] ?? '');
-    $password = trim($_POST['password'] ?? '');
+if ($_SERVER["REQUEST_METHOD"] === "POST") {
+    $username = trim($_POST["username"] ?? "");
+    $password = trim($_POST["password"] ?? "");
 
     // Validate username and password
     if ($username === USERNAME && password_verify($password, HASHED_PASSWORD)) {
@@ -47,8 +54,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         session_regenerate_id(true);
 
         // Set session variables
-        $_SESSION['logged_in'] = true;
-        $_SESSION['username'] = $username;
+        $_SESSION["logged_in"] = true;
+        $_SESSION["username"] = $username;
 
         // Redirect to home page
         header("Location: home.php");
