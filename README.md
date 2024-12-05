@@ -37,7 +37,7 @@
 
 ### User Authentication
 1. Navigate to `login.php`.
-2. Enter the username and password configured in `config.php`. (Default Username and Password: user password)
+2. Enter the username and password configured in `config.php`. (Default Username: `user`, Default Password: `password`)
 3. Upon successful login, you will be redirected to `home.php`.
 
 ### File Operations
